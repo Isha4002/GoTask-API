@@ -1,0 +1,43 @@
+services:
+
+  db:
+    image: postgres:17
+    container_name: gotask-postgres
+
+    environment:
+      POSTGRES_USER: gotask_user
+      POSTGRES_PASSWORD: gotask_password
+      POSTGRES_DB: gotask_db
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gotask_user -d gotask_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+
+    container_name: gotask-api
+
+    ports:
+      - "8080:8080"
+
+    env_file:
+      - .env
+
+    environment:
+      DB_HOST: db
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
